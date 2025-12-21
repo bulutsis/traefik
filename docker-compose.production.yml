@@ -50,7 +50,7 @@ services:
       - "traefik.enable=true"
 
       # Traefik Dashboard Router
-      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-traefik.localhost}`)" # Traefik panosuna erişim için host adı
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-traefik.localhost}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls.certresolver=myresolver"
       - "traefik.http.routers.traefik.service=api@internal"
