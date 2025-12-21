@@ -31,13 +31,13 @@ services:
       # EntryPoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      # HTTP -> HTTPS Otomatik Yönlendirme
+      ## HTTP -> HTTPS Otomatik Yönlendirme
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      # Bu ayar, X-Forwarded-For başlığının silinmesini engeller. Cloudflare ve Docker NAT arkasında olduğun için bu şart.
+      ## Bu ayar, X-Forwarded-For başlığının silinmesini engeller. Cloudflare ve Docker NAT arkasında olduğun için bu şart.
       - "--entryPoints.web.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
       - "--entryPoints.websecure.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
-      # Global CrowdSec Middleware
+      ## Global CrowdSec Middleware
       - "--entrypoints.web.http.middlewares=crowdsec@docker"
       - "--entrypoints.websecure.http.middlewares=crowdsec@docker"
 
@@ -63,7 +63,7 @@ services:
       - "traefik.http.middlewares.traefik-allowlist.ipallowlist.ipstrategy.depth=1"
 
       # CrowdSec Forward Auth Middleware
-      - "traefik.http.middlewares.crowdsec.forwardauth.address=http://crowdsec-bouncer:8080/api/v1/forwardAuth"
+      - "traefik.http.middlewares.crowdsec.forwardauth.address=http://crowdsec-traefik-bouncer:8080/api/v1/forwardAuth"
       - "traefik.http.middlewares.crowdsec.forwardauth.trustForwardHeader=true"
     ports:
       - "80:80"
@@ -82,22 +82,31 @@ services:
       - crowdsec-data:/var/lib/crowdsec/data
       - crowdsec-config:/etc/crowdsec
       - ./.docker/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
-      - ./.docker/crowdsec/scenarios:/etc/crowdsec/scenarios
       - /var/log/traefik:/var/log/traefik:ro
     networks:
       - traefik-network
+    healthcheck:
+      test: ["CMD", "cscli", "lapi", "status"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
 
   crowdsec-traefik-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer:latest
     container_name: crowdsec-traefik-bouncer
     restart: unless-stopped
     environment:
+      GIN_MODE: "release"
+      FAIL_OPEN: "true"
       CROWDSEC_BOUNCER_API_KEY: ${CROWDSEC_TRAEFIK_BOUNCER_API_KEY}
-      CROWDSEC_AGENT_HOST: crowdsec
-      CROWDSEC_AGENT_PORT: 8080
-      TRUSTED_PROXIES: ${TRUSTED_IPS}
+      CROWDSEC_AGENT_HOST: crowdsec:8080
+      PORT: 8080
+      TRUSTED_PROXIES: "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16,${TRUSTED_IPS}"
     networks:
       - traefik-network
+    depends_on:
+      crowdsec:
+        condition: service_healthy
 
 volumes:
   crowdsec-data:
