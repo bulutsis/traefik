@@ -1,0 +1,18 @@
+crowdsec_lapi_key: "${CROWDSEC_LAPI_KEY}"
+crowdsec_lapi_url: "${CROWDSEC_LAPI_URL}"
+crowdsec_update_frequency: "${CROWDSEC_UPDATE_FREQUENCY}"
+
+cloudflare_config:
+  accounts:
+    - id: "${CLOUDFLARE_ACCOUNT_ID}"
+      token: "${CLOUDFLARE_TOKEN}"
+      ip_list_prefix: crowdsec
+      default_action: managed_challenge
+      total_ip_list_capacity: 10000
+
+      zones:
+        - actions:
+            - managed_challenge
+          zone_id: "${CLOUDFLARE_ZONE_ID}"
+
+  update_frequency: "${CLOUDFLARE_UPDATE_FREQUENCY}"
