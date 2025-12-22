@@ -59,7 +59,7 @@ services:
       - "traefik.http.routers.traefik.middlewares=traefik-allowlist"
 
       # IP Allowlist
-      - "traefik.http.middlewares.traefik-allowlist.ipallowlist.sourcerange=${TRAEFIK_DASHBOARD_ALLOWLIST}"
+      - "traefik.http.middlewares.traefik-allowlist.ipallowlist.sourcerange=${DASHBOARD_ALLOWLIST}"
       - "traefik.http.middlewares.traefik-allowlist.ipallowlist.ipstrategy.depth=1"
 
       # CrowdSec Forward Auth Middleware
@@ -129,6 +129,36 @@ services:
       crowdsec:
         condition: service_healthy
     restart: unless-stopped
+
+  crowdsec-manager:
+    image: hhftechnology/crowdsec-manager:latest
+    container_name: crowdsec-manager
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CROWDSEC_LAPI_URL: http://crowdsec:8080
+      CROWDSEC_LAPI_KEY: ${CROWDSEC_MANAGER_API_KEY}
+      TZ: Europe/Istanbul
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+
+      # Router
+      - "traefik.http.routers.crowdsec-manager.rule=Host(`${CROWDSEC_DASHBOARD_HOST:-crowdsec.localhost}`)"
+      - "traefik.http.routers.crowdsec-manager.entrypoints=websecure"
+      - "traefik.http.routers.crowdsec-manager.tls.certresolver=myresolver"
+
+      # Dashboard Security
+      - "traefik.http.routers.crowdsec-manager.middlewares=traefik-allowlist"
+
+      # IP Allowlist
+      - "traefik.http.middlewares.crowdsec-manager-allowlist.ipallowlist.sourcerange=${DASHBOARD_ALLOWLIST}"
+      - "traefik.http.middlewares.crowdsec-manager-allowlist.ipallowlist.ipstrategy.depth=1"
+
+      # Service
+      - "traefik.http.services.crowdsec-manager.loadbalancer.server.port=8080"
 
 volumes:
   crowdsec-data:
