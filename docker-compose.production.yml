@@ -37,9 +37,6 @@ services:
       ## Bu ayar, X-Forwarded-For başlığının silinmesini engeller. Cloudflare ve Docker NAT arkasında olduğun için bu şart.
       - "--entryPoints.web.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
       - "--entryPoints.websecure.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
-      ## Global CrowdSec Middleware
-      - "--entrypoints.web.http.middlewares=crowdsec@docker"
-      - "--entrypoints.websecure.http.middlewares=crowdsec@docker"
 
       # Let's Encrypt Ayarları (Mail adresini güncelle!)
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
