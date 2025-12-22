@@ -124,7 +124,7 @@ services:
     volumes:
       - .docker/crowdsec/bouncers/cloudflare-bouncer.yaml:/etc/crowdsec/bouncers/crowdsec-cloudflare-bouncer.yaml:ro
     networks:
-      - app-network
+      - traefik-network
     depends_on:
       crowdsec:
         condition: service_healthy
