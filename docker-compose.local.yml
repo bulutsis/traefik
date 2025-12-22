@@ -2,7 +2,6 @@ services:
   traefik:
     image: traefik:v3.6.5
     container_name: traefik
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -46,6 +45,7 @@ services:
       - "443:443"
     networks:
       - traefik-network
+    restart: unless-stopped
 
 networks:
   traefik-network:

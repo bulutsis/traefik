@@ -2,7 +2,6 @@ services:
   traefik:
     image: traefik:v3.6.5
     container_name: traefik
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -67,11 +66,11 @@ services:
       - "443:443"
     networks:
       - traefik-network
+    restart: unless-stopped
 
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     container_name: crowdsec
-    restart: unless-stopped
     environment:
       COLLECTIONS: "crowdsecurity/http-cve crowdsecurity/nginx crowdsecurity/traefik"
       GID: "1000"
@@ -84,6 +83,7 @@ services:
       - /var/log/traefik:/var/log/traefik:ro
     networks:
       - traefik-network
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD", "cscli", "lapi", "status" ]
       interval: 10s
@@ -93,7 +93,6 @@ services:
   crowdsec-traefik-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer:latest
     container_name: crowdsec-traefik-bouncer
-    restart: unless-stopped
     environment:
       GIN_MODE: "release"
       FAIL_OPEN: "true"
@@ -103,6 +102,7 @@ services:
       TRUSTED_PROXIES: "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16,${TRUSTED_IPS}"
     networks:
       - traefik-network
+    restart: unless-stopped
     depends_on:
       crowdsec:
         condition: service_healthy
@@ -122,23 +122,20 @@ services:
       - .docker/crowdsec/bouncers/cloudflare-bouncer.yaml:/etc/crowdsec/bouncers/crowdsec-cloudflare-bouncer.yaml:ro
     networks:
       - traefik-network
+    restart: unless-stopped
     depends_on:
       crowdsec:
         condition: service_healthy
-    restart: unless-stopped
 
   crowdsec-manager:
     image: hhftechnology/crowdsec-manager:latest
     container_name: crowdsec-manager
-    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       CROWDSEC_LAPI_URL: http://crowdsec:8080
       CROWDSEC_LAPI_KEY: ${CROWDSEC_MANAGER_API_KEY}
       TZ: Europe/Istanbul
-    networks:
-      - traefik-network
     labels:
       - "traefik.enable=true"
 
@@ -156,6 +153,9 @@ services:
 
       # Service
       - "traefik.http.services.crowdsec-manager.loadbalancer.server.port=8080"
+    networks:
+      - traefik-network
+    restart: unless-stopped
 
 volumes:
   crowdsec-data:
