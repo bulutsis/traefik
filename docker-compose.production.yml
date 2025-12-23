@@ -2,6 +2,8 @@ services:
   traefik:
     image: traefik:v3.6.5
     container_name: traefik
+    environment:
+      CF_DNS_API_TOKEN: ${CLOUDFLARE_TOKEN}
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -24,26 +26,42 @@ services:
 
       # Providers
       - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false" # Her konteyneri otomatik dışarı açma
+      - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=traefik-network"
 
       # EntryPoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      ## HTTP -> HTTPS Otomatik Yönlendirme
+      ## HTTP -> HTTPS Automatic Redirection
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       ## Bu ayar, X-Forwarded-For başlığının silinmesini engeller. Cloudflare ve Docker NAT arkasında olduğun için bu şart.
       - "--entryPoints.web.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
       - "--entryPoints.websecure.forwardedHeaders.trustedIPs=${TRUSTED_IPS}"
 
-      # Let's Encrypt Ayarları
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      ####################################################################################################
+      # Certificate Resolver (Let's Encrypt ACME with Cloudflare DNS Challenge)
       - "--certificatesresolvers.myresolver.acme.email=${LE_EMAIL:-admin@example.com}"
       - "--certificatesresolvers.myresolver.acme.storage=/acme.json"
+      ####################################################################################################
+      # Staging Let's Encrypt (Only Test) Sunucusu
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      ####################################################################################################
+      # HTTP Challenge (Alternative)
+      #- "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      ####################################################################################################
+      # DNS Challenge (Cloudflare)
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=0"
+      ####################################################################################################
     labels:
       - "traefik.enable=true"
+
+      # TLS Domains for Wildcard Certificates
+      - "traefik.http.routers.traefik.tls.domains[0].main=${INTERNAL_SERVICE_DOMAIN}"
+      - "traefik.http.routers.traefik.tls.domains[0].sans=*.${INTERNAL_SERVICE_DOMAIN}"
 
       # Traefik Dashboard Router
       - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-traefik.localhost}`)"
