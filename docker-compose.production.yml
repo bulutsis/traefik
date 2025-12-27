@@ -89,7 +89,7 @@ services:
     image: crowdsecurity/crowdsec:latest
     container_name: crowdsec
     environment:
-      COLLECTIONS: "crowdsecurity/http-cve crowdsecurity/nginx crowdsecurity/traefik"
+      COLLECTIONS: "crowdsecurity/http-cve crowdsecurity/traefik"
       GID: "1000"
       DISABLE_HUB_UPGRADE: ${CROWDSEC_HUB_UPGRADE_DISABLE}
     volumes:
@@ -127,7 +127,7 @@ services:
         condition: service_healthy
 
   crowdsec-cloudflare-bouncer:
-    image: crowdsecurity/cloudflare-bouncer
+    image: crowdsecurity/cloudflare-bouncer:latest
     container_name: crowdsec-cloudflare-bouncer
     environment:
       - CROWDSEC_LAPI_URL=${CROWDSEC_LAPI_URL}
