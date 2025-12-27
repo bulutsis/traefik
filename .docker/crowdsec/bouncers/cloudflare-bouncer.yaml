@@ -6,7 +6,7 @@ crowdsec_update_frequency: "${CROWDSEC_UPDATE_FREQUENCY}"
 
 only_include_decisions_from:    # Hangi kaynaklardan karar alınacağını belirleme
   - cscli    # CrowdSec’in kendi kararları (Yerel kararlar)
-  #- crowdsec    # LAPI üzerinden gelen kararlar (Community kararları)
+  - crowdsec    # Yerel CrowdSec Engine’in otomatik oluşturduğu kararlar
 
 include_scenarios_containing: [] # ignore IPs banned for triggering scenarios not containing either of provided word, eg ["ssh", "http"]
 exclude_scenarios_containing: [] # ignore IPs banned for triggering scenarios containing either of provided word
